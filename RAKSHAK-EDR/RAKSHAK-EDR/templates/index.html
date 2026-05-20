@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAKSHAK-EDR · Secure Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --acid:  #00ff9d;
+  --red:   #ff2d55;
+  --dim:   #070b14;
+  --panel: rgba(0,255,157,0.04);
+  --border:rgba(0,255,157,0.2);
+  --text:  #c8ffe8;
+  --muted: #3d6b54;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body {
+  min-height:100vh;
+  background:var(--dim);
+  font-family:'Share Tech Mono',monospace;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* scanlines */
+body::after {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,157,0.012) 2px,rgba(0,255,157,0.012) 4px);
+}
+
+/* grid */
+.grid {
+  position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,255,157,0.035) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,255,157,0.035) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* particles */
+.pt span {
+  position:fixed;border-radius:50%;
+  background:var(--acid);opacity:0;
+  animation:rise linear infinite;
+}
+@keyframes rise{
+  0%  {transform:translateY(100vh);opacity:0}
+  10% {opacity:.7}
+  90% {opacity:.3}
+  100%{transform:translateY(-5vh);opacity:0}
+}
+
+/* card */
+.card {
+  position:relative;z-index:10;
+  width:420px;padding:48px 40px 40px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  backdrop-filter:blur(14px);
+  box-shadow:0 0 80px rgba(0,255,157,0.05),inset 0 1px 0 rgba(0,255,157,0.1);
+  animation:cardIn .7s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+
+/* corner brackets */
+.card::before,.card::after{content:'';position:absolute;width:22px;height:22px}
+.card::before{top:-1px;left:-1px;border-top:2px solid var(--acid);border-left:2px solid var(--acid)}
+.card::after {bottom:-1px;right:-1px;border-bottom:2px solid var(--acid);border-right:2px solid var(--acid)}
+
+/* logo */
+.logo{text-align:center;margin-bottom:30px}
+.shield{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:68px;height:68px;border-radius:50%;
+  border:1.5px solid var(--acid);margin-bottom:14px;
+  box-shadow:0 0 24px rgba(0,255,157,0.2);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 24px rgba(0,255,157,0.2)}50%{box-shadow:0 0 40px rgba(0,255,157,0.45)}}
+.shield svg{width:34px;height:34px;stroke:var(--acid);fill:none;stroke-width:1.5}
+.logo-name{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;
+           letter-spacing:6px;color:var(--acid);text-shadow:0 0 24px rgba(0,255,157,0.5)}
+.logo-sub{font-size:9px;letter-spacing:3.5px;color:var(--muted);margin-top:5px}
+
+/* status pill */
+.status{
+  display:flex;align-items:center;gap:8px;
+  font-size:10px;color:var(--muted);letter-spacing:1px;
+  padding:8px 12px;margin-bottom:26px;
+  background:rgba(0,0,0,0.35);border:1px solid rgba(0,255,157,0.07);
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--acid);
+     box-shadow:0 0 8px var(--acid);animation:blink 1.2s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* error */
+.error{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:14px;
+  background:rgba(255,45,85,.08);border:1px solid rgba(255,45,85,.3);
+  color:var(--red);font-size:11px;animation:shake .4s;
+}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* fields */
+.field{margin-bottom:18px}
+.field label{display:block;font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:7px}
+.field input{
+  width:100%;padding:12px 14px;
+  background:rgba(0,0,0,.55);border:1px solid rgba(0,255,157,.15);
+  color:var(--acid);font-family:'Share Tech Mono',monospace;font-size:14px;
+  outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--acid);
+}
+.field input::placeholder{color:var(--muted)}
+.field input:focus{border-color:var(--acid);box-shadow:0 0 0 2px rgba(0,255,157,.07),inset 0 0 18px rgba(0,255,157,.03)}
+
+/* button */
+.btn{
+  width:100%;padding:14px;margin-top:6px;
+  background:transparent;border:1.5px solid var(--acid);
+  color:var(--acid);font-family:'Orbitron',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:4px;
+  cursor:pointer;position:relative;overflow:hidden;transition:color .25s;
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:var(--acid);transform:translateX(-100%);
+  transition:transform .28s cubic-bezier(.16,1,.3,1);
+}
+.btn:hover::before{transform:translateX(0)}
+.btn:hover{color:var(--dim)}
+.btn span{position:relative;z-index:1}
+
+/* footer */
+.card-foot{
+  margin-top:26px;padding-top:18px;
+  border-top:1px solid rgba(0,255,157,.07);
+  display:flex;justify-content:space-between;
+  font-size:9px;color:var(--muted);letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="grid"></div>
+<div class="pt" id="pt"></div>
+
+<div class="card">
+  <div class="logo">
+    <div class="shield">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <div class="logo-name">RAKSHAK</div>
+    <div class="logo-sub">ENDPOINT DETECTION &amp; RESPONSE</div>
+  </div>
+
+  <div class="status">
+    <div class="dot"></div>
+    <span>SYSTEM ONLINE · SECURE ACCESS REQUIRED · v2.4.1</span>
+  </div>
+
+  {% if error %}
+  <div class="error"><span>⚠</span> {{ error }}</div>
+  {% endif %}
+
+  <form action="/auth" method="POST">
+    <div class="field">
+      <label>OPERATOR ID</label>
+      <input type="text" name="username" placeholder="Enter operator ID" autocomplete="off" required>
+    </div>
+    <div class="field">
+      <label>ACCESS KEY</label>
+      <input type="password" name="password" placeholder="••••••••••" required>
+    </div>
+    <button class="btn" type="submit"><span>AUTHENTICATE →</span></button>
+  </form>
+
+  <div class="card-foot">
+    <span>RAKSHAK-EDR © 2024</span>
+    <span>CLEARANCE: LEVEL-3</span>
+  </div>
+</div>
+
+<script>
+const pt = document.getElementById('pt');
+for(let i=0;i<28;i++){
+  const s=document.createElement('span');
+  const sz=Math.random()<.3?3:2;
+  s.style.cssText=`left:${Math.random()*100}vw;width:${sz}px;height:${sz}px;animation-duration:${7+Math.random()*14}s;animation-delay:${Math.random()*12}s`;
+  pt.appendChild(s);
+}
+</script>
+</body>
+</html>

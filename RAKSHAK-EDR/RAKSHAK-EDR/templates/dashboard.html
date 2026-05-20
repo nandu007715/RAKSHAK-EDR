@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAKSHAK-EDR · SOC Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="grid-bg"></div>
+
+<header class="topbar">
+  <div class="tb-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </div>
+
+    <div>
+      <div class="logo-text">RAKSHAK<span>-EDR</span></div>
+      <div class="logo-sub2">SECURITY OPERATIONS CENTER</div>
+    </div>
+  </div>
+
+  <div class="tb-center">
+    <div class="threat-bar">
+      <span class="tbl">THREAT LEVEL</span>
+      <div class="tsegs">
+        <div class="tseg g on"></div>
+        <div class="tseg g on"></div>
+        <div class="tseg a on" id="ts3"></div>
+        <div class="tseg a" id="ts4"></div>
+        <div class="tseg r" id="ts5"></div>
+      </div>
+      <span class="tbv" id="tlText">MODERATE</span>
+    </div>
+  </div>
+
+  <div class="tb-right">
+    <div class="clk">
+      <div class="clk-time" id="clock">--:--:--</div>
+      <div class="clk-date" id="cdate">---</div>
+    </div>
+
+    <div class="user-chip">
+      <span class="udot"></span>{{ role_label }}
+    </div>
+
+    <a href="/logout" class="btn-out">LOGOUT</a>
+  </div>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card sc-green">
+    <div class="sc-icon">NET</div>
+    <div class="sc-body">
+      <div class="sc-lbl">PACKETS ANALYZED</div>
+      <div class="sc-val green" id="packetCount">{{ packet_count }}</div>
+      <div class="sc-sub">LIVE MONITORING ACTIVE</div>
+    </div>
+  </div>
+
+  <div class="stat-card sc-red">
+    <div class="sc-icon">ALR</div>
+    <div class="sc-body">
+      <div class="sc-lbl">THREATS DETECTED</div>
+      <div class="sc-val red" id="threatCount">{{ threat_count }}</div>
+      <div class="sc-sub">SESSION COUNTER</div>
+    </div>
+  </div>
+
+  <div class="stat-card sc-amber">
+    <div class="sc-icon">TIM</div>
+    <div class="sc-body">
+      <div class="sc-lbl">LAST SCAN</div>
+      <div class="sc-val amber" id="lastScan">{{ last_scan }}</div>
+      <div class="sc-sub">CONTINUOUS ANALYSIS</div>
+    </div>
+  </div>
+
+  <div class="stat-card sc-blue">
+    <div class="sc-icon">SEC</div>
+    <div class="sc-body">
+      <div class="sc-lbl">SYSTEM STATUS</div>
+      <div class="sc-val green">PROTECTED</div>
+      <div class="sc-sub">DEFENSE LAYERS ACTIVE</div>
+    </div>
+  </div>
+</div>
+
+<div class="main-grid">
+
+  <div class="panel panel-wide">
+    <div class="panel-hdr">
+      <div class="ph-left">
+        <div class="ph-dot"></div>
+        <span class="ph-title">THREAT LOG DATABASE</span>
+        <span class="ph-count" id="logCount">{{ logs|length }} ENTRIES</span>
+      </div>
+
+      <div class="ph-right">
+        {% if can_inject %}
+        <button class="btn-sm amber" onclick="simulateThreat()">INJECT THREAT</button>
+        {% endif %}
+
+        {% if can_export %}
+        <a href="/export-csv" class="btn-sm green">EXPORT CSV</a>
+        {% endif %}
+
+        {% if can_clear %}
+        <button class="btn-sm red" onclick="clearLogs()">CLEAR LOGS</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="threatTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>TIME</th>
+            <th>ATTACK TYPE</th>
+            <th>SOURCE IP</th>
+            <th>SEVERITY</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+
+        <tbody id="logBody">
+          {% for log in logs %}
+          <tr class="log-row sev-{{ log.severity | lower }}" data-id="{{ log.id }}">
+            <td class="muted">#{{ log.id }}</td>
+            <td>{{ log.time }}</td>
+            <td class="attack-name">{{ log.attack }}</td>
+            <td class="ip-addr">{{ log.ip }}</td>
+            <td>
+              <span class="sev-badge sev-{{ log.severity | lower }}">
+                {{ log.severity }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge st-{{ log.status | lower | replace(' ','_') }}">
+                {{ log.status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right-col">
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot"></div>
+          <span class="ph-title">HOST INFORMATION</span>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;font-size:11px;line-height:2;">
+        <div><span class="muted">HOSTNAME :</span> {{ host.hostname }}</div>
+        <div><span class="muted">IP ADDRESS :</span> {{ host.ip }}</div>
+        <div><span class="muted">MAC ADDRESS :</span> {{ host.mac }}</div>
+        <div><span class="muted">OPERATING SYSTEM :</span> {{ host.os }}</div>
+        <div><span class="muted">CPU USAGE :</span> {{ host.cpu }}%</div>
+        <div><span class="muted">RAM USAGE :</span> {{ host.ram }}%</div>
+        <div><span class="muted">DISK USAGE :</span> {{ host.disk }}%</div>
+        <div><span class="muted">UPTIME :</span> {{ host.uptime }}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot"></div>
+          <span class="ph-title">AI THREAT ASSESSMENT</span>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px;font-size:11px;line-height:1.9;">
+        <div style="color:#00ff9d;font-weight:bold;margin-bottom:8px;">
+          ANALYSIS ENGINE ONLINE
+        </div>
+
+        <div>
+          Traffic pattern is being continuously evaluated for reconnaissance,
+          flooding behavior, spoof attempts, and anomalous connection bursts.
+        </div>
+
+        <div style="margin-top:10px;color:#ff9f0a;">
+          Current assessment: Moderate risk posture
+        </div>
+
+        <div style="margin-top:10px;color:#3d6b54;">
+          Recommendation: Continue active monitoring and validate suspicious sources.
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot"></div>
+          <span class="ph-title">INCIDENT RESPONSE</span>
+        </div>
+      </div>
+
+      <div style="padding:14px;display:grid;gap:8px;">
+        <button class="btn-sm amber" onclick="incidentAction('investigate')">INVESTIGATE</button>
+        <button class="btn-sm red" onclick="incidentAction('block')">BLOCK IP</button>
+        <button class="btn-sm green" onclick="incidentAction('quarantine')">QUARANTINE</button>
+        <button class="btn-sm green" onclick="incidentAction('resolve')">RESOLVE</button>
+        <button class="btn-sm amber" onclick="incidentAction('ignore')">IGNORE</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot blink"></div>
+          <span class="ph-title">LIVE TERMINAL</span>
+        </div>
+      </div>
+
+      <div class="terminal" id="terminal">
+        <div class="tline"><span class="t-ts">[BOOT]</span> <span class="t-ok">RAKSHAK-EDR initialized</span></div>
+        <div class="tline"><span class="t-ts">[SYS ]</span> Packet sniffer online</div>
+        <div class="tline"><span class="t-ts">[SYS ]</span> Database connected</div>
+        <div class="tline"><span class="t-ts">[NET ]</span> Monitoring network segments</div>
+        <div class="tline"><span class="t-ts">[FW  ]</span> Firewall rules loaded</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot"></div>
+          <span class="ph-title">SEVERITY BREAKDOWN</span>
+        </div>
+      </div>
+
+      <div class="sev-bars" id="sevBars">
+        <div class="sev-row">
+          <span class="sev-label">CRITICAL</span>
+          <div class="sev-track"><div class="sev-fill red" id="bCrit"></div></div>
+          <span class="sev-num" id="nCrit">0</span>
+        </div>
+
+        <div class="sev-row">
+          <span class="sev-label">HIGH</span>
+          <div class="sev-track"><div class="sev-fill amber" id="bHigh"></div></div>
+          <span class="sev-num" id="nHigh">0</span>
+        </div>
+
+        <div class="sev-row">
+          <span class="sev-label">MEDIUM</span>
+          <div class="sev-track"><div class="sev-fill yellow" id="bMed"></div></div>
+          <span class="sev-num" id="nMed">0</span>
+        </div>
+
+        <div class="sev-row">
+          <span class="sev-label">LOW</span>
+          <div class="sev-track"><div class="sev-fill green" id="bLow"></div></div>
+          <span class="sev-num" id="nLow">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="ph-left">
+          <div class="ph-dot blink red-dot"></div>
+          <span class="ph-title">NETWORK PULSE</span>
+        </div>
+      </div>
+
+      <canvas id="pulseCanvas" width="280" height="80"></canvas>
+    </div>
+
+  </div>
+</div>
+
+<div class="popup-alert" id="popupAlert">
+  <div class="popup-inner">
+    <div class="popup-body">
+      <div class="popup-title">HIGH THREAT ACTIVITY</div>
+      <div class="popup-msg" id="popupMsg">
+        Multiple suspicious events detected. Review recommended.
+      </div>
+    </div>
+
+    <button class="popup-close" onclick="closeAlert()">X</button>
+  </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
